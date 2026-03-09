@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user of the AgentScope platform.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "description": "The user's profile photo URL." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "Competitor": {
+      "title": "Competitor",
+      "description": "A competitor being monitored by AgentScope.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the competitor." },
+        "userId": { "type": "string", "description": "The ID of the user who added this competitor." },
+        "name": { "type": "string", "description": "Name of the competitor." },
+        "website": { "type": "string", "format": "uri", "description": "Website URL of the competitor." },
+        "status": { "type": "string", "enum": ["active", "paused", "archived"], "description": "Monitoring status." },
+        "lastScanAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last successful scan." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the competitor was added." }
+      },
+      "required": ["userId", "name", "website"]
+    },
+    "ScrapedData": {
+      "title": "Scraped Data",
+      "description": "Raw data extracted from a competitor's website.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the scan result." },
+        "competitorId": { "type": "string", "description": "ID of the competitor." },
+        "userId": { "type": "string", "description": "ID of the user." },
+        "products": { "type": "array", "items": { "type": "object" }, "description": "List of products found." },
+        "pricing": { "type": "array", "items": { "type": "object" }, "description": "Pricing information found." },
+        "offers": { "type": "array", "items": { "type": "string" }, "description": "Current offers or promotions." },
+        "features": { "type": "array", "items": { "type": "string" }, "description": "Key product features." },
+        "scannedAt": { "type": "string", "format": "date-time", "description": "When the scan was performed." }
+      },
+      "required": ["competitorId", "userId", "scannedAt"]
+    },
+    "AnalysisResult": {
+      "title": "Analysis Result",
+      "description": "AI-generated analysis of competitor data.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the analysis." },
+        "competitorId": { "type": "string", "description": "ID of the competitor." },
+        "userId": { "type": "string", "description": "ID of the user." },
+        "priceChanges": { "type": "array", "items": { "type": "object" }, "description": "Detected price changes." },
+        "discountPatterns": { "type": "string", "description": "Identified discount patterns." },
+        "campaigns": { "type": "array", "items": { "type": "string" }, "description": "Detected marketing campaigns." },
+        "positioning": { "type": "string", "description": "Competitor positioning analysis." },
+        "analyzedAt": { "type": "string", "format": "date-time", "description": "When the analysis was performed." }
+      },
+      "required": ["competitorId", "userId", "analyzedAt"]
+    },
+    "MarketingContent": {
+      "title": "Marketing Content",
+      "description": "AI-generated marketing strategies and content.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the content." },
+        "competitorId": { "type": "string", "description": "ID of the competitor this content is responding to." },
+        "userId": { "type": "string", "description": "ID of the user." },
+        "strategy": { "type": "string", "description": "Recommended business strategy." },
+        "socialPosts": { "type": "array", "items": { "type": "string" }, "description": "Generated social media posts." },
+        "emailContent": { "type": "string", "description": "Generated marketing email content." },
+        "adCopy": { "type": "array", "items": { "type": "string" }, "description": "Generated ad copy options." },
+        "generatedAt": { "type": "string", "format": "date-time", "description": "When the content was generated." }
+      },
+      "required": ["userId", "generatedAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Final structured business intelligence report.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the report." },
+        "userId": { "type": "string", "description": "ID of the user." },
+        "title": { "type": "string", "description": "Title of the report." },
+        "summary": { "type": "string", "description": "Executive summary." },
+        "insights": { "type": "array", "items": { "type": "string" }, "description": "Key business insights." },
+        "recommendations": { "type": "array", "items": { "type": "string" }, "description": "Actionable recommendations." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the report was created." }
+      },
+      "required": ["userId", "title", "createdAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "A target customer or audience member.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "email"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "A marketing campaign sent to customers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "contentId": { "type": "string" },
+        "targetTags": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["sent", "failed"] },
+        "sentAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "contentId", "status", "sentAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles." },
+    "/competitors/{competitorId}": { "schema": "Competitor", "description": "Competitors being tracked." },
+    "/scrapedData/{dataId}": { "schema": "ScrapedData", "description": "Raw scraped data from competitors." },
+    "/analysisResults/{analysisId}": { "schema": "AnalysisResult", "description": "AI analysis of competitor data." },
+    "/marketingContent/{contentId}": { "schema": "MarketingContent", "description": "Generated marketing materials." },
+    "/reports/{reportId}": { "schema": "Report", "description": "Final intelligence reports." },
+    "/customers/{customerId}": { "schema": "Customer", "description": "Target audience." },
+    "/campaigns/{campaignId}": { "schema": "Campaign", "description": "Sent campaigns." }
+  }
+}
