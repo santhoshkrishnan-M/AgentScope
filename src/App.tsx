@@ -16,6 +16,7 @@ import AIInsights from './components/AIInsights';
 import Marketing from './components/Marketing';
 import Reports from './components/Reports';
 import Customers from './components/Customers';
+import Products from './components/Products';
 import Settings from './components/Settings';
 import { Competitor, AgentStatus } from './types';
 import { agentService } from './services/agentService';
@@ -236,6 +237,11 @@ export default function App() {
         return <Dashboard user={user} onStartWorkflow={startWorkflow} agentStatus={agentStatus} />;
       case 'competitors':
         return <Competitors user={user} />;
+      case 'products':
+        return <Products user={user} onGenerateMarketing={(product) => {
+          setActiveTab('marketing');
+          // Logic to trigger marketing generation for this product will be handled in Products.tsx
+        }} />;
       case 'audience':
         return <Customers user={user} />;
       case 'insights':

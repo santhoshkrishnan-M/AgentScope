@@ -72,3 +72,17 @@ export function Button({
     </button>
   );
 }
+
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+export function Input({ className, ...props }: InputProps) {
+  return (
+    <input
+      className={cn(
+        "w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl text-sm focus:ring-2 focus:ring-black/5 transition-all",
+        className
+      )}
+      {...props}
+    />
+  );
+}

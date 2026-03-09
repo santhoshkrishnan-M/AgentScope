@@ -77,4 +77,25 @@ export interface Campaign {
   sentAt: string;
 }
 
+export interface Product {
+  id: string;
+  userId: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  features: string[];
+  imageUrl?: string;
+  websiteUrl?: string;
+  targetMarket?: string;
+  marketingGoal: string;
+  campaignBudget?: number;
+  campaignDuration?: string;
+  marketingChannels: string[];
+  campaignStatus: 'draft' | 'active' | 'completed';
+  lastMarketingAction?: string;
+  createdAt: string;
+}
+
 export type AgentStatus = 'idle' | 'scouting' | 'analyzing' | 'strategizing' | 'marketing' | 'reporting' | 'completed' | 'error';

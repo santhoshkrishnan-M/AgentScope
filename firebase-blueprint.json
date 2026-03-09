@@ -105,6 +105,32 @@
       },
       "required": ["userId", "name", "email"]
     },
+    "Product": {
+      "title": "Product",
+      "description": "A product managed by the user for marketing generation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "discountPrice": { "type": "number" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "websiteUrl": { "type": "string", "format": "uri" },
+        "targetMarket": { "type": "string" },
+        "marketingGoal": { "type": "string" },
+        "campaignBudget": { "type": "number" },
+        "campaignDuration": { "type": "string" },
+        "marketingChannels": { "type": "array", "items": { "type": "string" } },
+        "campaignStatus": { "type": "string", "enum": ["draft", "active", "completed"] },
+        "lastMarketingAction": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "category", "description", "price"]
+    },
     "Campaign": {
       "title": "Campaign",
       "description": "A marketing campaign sent to customers.",
@@ -128,6 +154,7 @@
     "/marketingContent/{contentId}": { "schema": "MarketingContent", "description": "Generated marketing materials." },
     "/reports/{reportId}": { "schema": "Report", "description": "Final intelligence reports." },
     "/customers/{customerId}": { "schema": "Customer", "description": "Target audience." },
+    "/products/{productId}": { "schema": "Product", "description": "User products for marketing." },
     "/campaigns/{campaignId}": { "schema": "Campaign", "description": "Sent campaigns." }
   }
 }

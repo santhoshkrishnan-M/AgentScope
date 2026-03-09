@@ -17,7 +17,8 @@ import {
   ScrapedData, 
   AnalysisResult, 
   MarketingContent, 
-  Report 
+  Report,
+  Product
 } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
@@ -76,10 +77,10 @@ export const agentService = {
       Features: ${JSON.stringify(scrapedData.features)}
       
       Provide a JSON analysis:
-      - priceChanges: Any detected or likely price changes compared to industry standards.
-      - discountPatterns: A summary of their discounting strategy.
-      - campaigns: Likely marketing campaigns they are running.
-      - positioning: Their market positioning (e.g., luxury, budget, tech-focused).
+      - priceChanges: An array of objects, each with 'product' (string) and 'change' (string, e.g., "-15%", "+$10").
+      - discountPatterns: A string summarizing their discounting strategy.
+      - campaigns: An array of simple strings representing likely marketing campaigns. Do NOT return objects.
+      - positioning: A string describing their market positioning.
       
       Return ONLY valid JSON.
     `;
@@ -91,13 +92,17 @@ export const agentService = {
     });
 
     const data = JSON.parse(response.text || "{}");
+    
+    // Defensive checks for array types
+    const priceChanges = Array.isArray(data.priceChanges) ? data.priceChanges : [];
+    const campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
 
     const analysisResult: Omit<AnalysisResult, 'id'> = {
       competitorId: scrapedData.competitorId,
       userId: scrapedData.userId,
-      priceChanges: data.priceChanges || [],
+      priceChanges,
       discountPatterns: data.discountPatterns || "",
-      campaigns: data.campaigns || [],
+      campaigns,
       positioning: data.positioning || "",
       analyzedAt: new Date().toISOString()
     };
@@ -118,9 +123,9 @@ export const agentService = {
       
       Generate a JSON response:
       - strategy: A comprehensive business strategy to compete.
-      - socialPosts: 3 social media post drafts.
+      - socialPosts: 3 simple strings of social media post drafts. Do NOT return objects.
       - emailContent: A marketing email template.
-      - adCopy: 3 variations of ad copy.
+      - adCopy: 3 simple strings of variations of ad copy. Do NOT return objects.
       
       Return ONLY valid JSON.
     `;
@@ -159,8 +164,8 @@ export const agentService = {
       Provide a JSON report:
       - title: A professional title for the report.
       - summary: An executive summary.
-      - insights: 3-5 key business insights.
-      - recommendations: 3-5 actionable recommendations.
+      - insights: 3-5 simple strings of key business insights. Do NOT return objects.
+      - recommendations: 3-5 simple strings of actionable recommendations. Do NOT return objects.
       
       Return ONLY valid JSON.
     `;
@@ -184,6 +189,61 @@ export const agentService = {
 
     const docRef = await addDoc(collection(db, "reports"), report);
     return { id: docRef.id, ...report };
+  },
+
+  /**
+   * Product Marketing Agent: Generates marketing strategy and content for a user's product.
+   */
+  async generateProductMarketing(product: Product): Promise<MarketingContent> {
+    const model = "gemini-3.1-flash-lite-preview";
+    const prompt = `
+      Act as a Senior Marketing Strategist. Generate a comprehensive marketing campaign for the following product:
+      Name: ${product.name}
+      Category: ${product.category}
+      Description: ${product.description}
+      Price: $${product.price}
+      Discount Price: ${product.discountPrice ? '$' + product.discountPrice : 'None'}
+      Features: ${product.features.join(', ')}
+      Target Market: ${product.targetMarket || 'General'}
+      Marketing Goal: ${product.marketingGoal}
+      Channels: ${product.marketingChannels.join(', ')}
+      
+      Provide a JSON response:
+      - strategy: A detailed marketing strategy (markdown).
+      - socialPosts: 3 simple strings of social media post drafts.
+      - emailContent: A marketing email template (markdown).
+      - adCopy: 3 simple strings of variations of ad copy.
+      
+      Return ONLY valid JSON.
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+    });
+
+    const data = JSON.parse(response.text || "{}");
+
+    const marketingContent: Omit<MarketingContent, 'id'> = {
+      competitorId: 'product-' + product.id, // Special ID for product-based content
+      userId: product.userId,
+      strategy: data.strategy || "",
+      socialPosts: data.socialPosts || [],
+      emailContent: data.emailContent || "",
+      adCopy: data.adCopy || [],
+      generatedAt: new Date().toISOString()
+    };
+
+    const docRef = await addDoc(collection(db, "marketingContent"), marketingContent);
+    
+    // Update product status
+    await updateDoc(doc(db, "products", product.id), { 
+      campaignStatus: 'active',
+      lastMarketingAction: 'AI Marketing Generated'
+    });
+
+    return { id: docRef.id, ...marketingContent };
   },
 
   /**

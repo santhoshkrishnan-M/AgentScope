@@ -11,7 +11,8 @@ import {
   Bell,
   User as UserIcon,
   Menu,
-  X
+  X,
+  Package
 } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -31,6 +32,7 @@ export default function Layout({ children, activeTab, setActiveTab, user }: Layo
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'competitors', label: 'Competitors', icon: Users },
+    { id: 'products', label: 'Products', icon: Package },
     { id: 'audience', label: 'Target Audience', icon: Users },
     { id: 'insights', label: 'AI Insights', icon: Zap },
     { id: 'marketing', label: 'Marketing Automation', icon: Megaphone },

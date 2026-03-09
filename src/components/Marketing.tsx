@@ -11,7 +11,7 @@ import {
   Send
 } from 'lucide-react';
 import { Card, Button } from './ui/Common';
-import { MarketingContent, Competitor, Campaign } from '../types';
+import { MarketingContent, Competitor, Campaign, Product } from '../types';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import ReactMarkdown from 'react-markdown';
@@ -24,6 +24,7 @@ interface MarketingProps {
 export default function Marketing({ user }: MarketingProps) {
   const [content, setContent] = React.useState<MarketingContent[]>([]);
   const [competitors, setCompetitors] = React.useState<Record<string, Competitor>>({});
+  const [products, setProducts] = React.useState<Record<string, Product>>({});
   const [campaigns, setCampaigns] = React.useState<Campaign[]>([]);
   const [copied, setCopied] = React.useState<string | null>(null);
   const [launching, setLaunching] = React.useState<string | null>(null);
@@ -54,6 +55,17 @@ export default function Marketing({ user }: MarketingProps) {
       handleFirestoreError(error, OperationType.LIST, 'competitors');
     });
 
+    const qProd = query(collection(db, 'products'), where('userId', '==', user.uid));
+    const unsubscribeProd = onSnapshot(qProd, (snapshot) => {
+      const prodMap: Record<string, Product> = {};
+      snapshot.docs.forEach(doc => {
+        prodMap[doc.id] = { id: doc.id, ...doc.data() } as Product;
+      });
+      setProducts(prodMap);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'products');
+    });
+
     const qCamp = query(collection(db, 'campaigns'), where('userId', '==', user.uid), orderBy('sentAt', 'desc'));
     const unsubscribeCamp = onSnapshot(qCamp, (snapshot) => {
       setCampaigns(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign)));
@@ -64,6 +76,7 @@ export default function Marketing({ user }: MarketingProps) {
     return () => {
       unsubscribe();
       unsubscribeComp();
+      unsubscribeProd();
       unsubscribeCamp();
     };
   }, [user]);
@@ -118,7 +131,11 @@ export default function Marketing({ user }: MarketingProps) {
                     <Megaphone className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">Strategy Response: {competitors[item.competitorId]?.name || 'Market Move'}</h3>
+                    <h3 className="text-xl font-bold">
+                      {item.competitorId.startsWith('product-') 
+                        ? `Product Strategy: ${products[item.competitorId.replace('product-', '')]?.name || 'My Product'}`
+                        : `Competitor Strategy: ${competitors[item.competitorId]?.name || 'Market Move'}`}
+                    </h3>
                     <p className="text-sm text-gray-500">Generated on {new Date(item.generatedAt).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -144,7 +161,7 @@ export default function Marketing({ user }: MarketingProps) {
                 </h4>
                 <div className="prose prose-emerald max-w-none text-emerald-900 font-medium leading-relaxed">
                   <ReactMarkdown>
-                    {item.strategy}
+                    {typeof item.strategy === 'object' ? JSON.stringify(item.strategy) : String(item.strategy || '')}
                   </ReactMarkdown>
                 </div>
               </Card>
@@ -157,9 +174,22 @@ export default function Marketing({ user }: MarketingProps) {
                   </h4>
                   {(item.socialPosts || []).map((post, i) => (
                     <Card key={i} className="p-4 relative group">
-                      <p className="text-sm text-gray-700 leading-relaxed">{post}</p>
+                      <div className="text-sm text-gray-700 leading-relaxed">
+                        {typeof post === 'object' && post !== null ? (
+                          <div className="space-y-1">
+                            {(post as any).platform && (
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600">
+                                {(post as any).platform}
+                              </span>
+                            )}
+                            <p>{(post as any).content || JSON.stringify(post)}</p>
+                          </div>
+                        ) : (
+                          String(post)
+                        )}
+                      </div>
                       <button 
-                        onClick={() => handleCopy(post, `${item.id}-social-${i}`)}
+                        onClick={() => handleCopy(typeof post === 'object' ? (post as any).content : String(post), `${item.id}-social-${i}`)}
                         className="absolute top-2 right-2 p-1.5 bg-white border border-black/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         {copied === `${item.id}-social-${i}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
@@ -176,7 +206,7 @@ export default function Marketing({ user }: MarketingProps) {
                   <Card className="p-6 relative group h-full">
                     <div className="prose prose-sm max-w-none text-sm text-gray-700 whitespace-pre-wrap">
                       <ReactMarkdown>
-                        {item.emailContent}
+                        {typeof item.emailContent === 'object' ? JSON.stringify(item.emailContent) : String(item.emailContent || '')}
                       </ReactMarkdown>
                     </div>
                     <button 
@@ -196,9 +226,13 @@ export default function Marketing({ user }: MarketingProps) {
                   {(item.adCopy || []).map((ad, i) => (
                     <Card key={i} className="p-4 relative group border-l-4 border-l-black">
                       <p className="text-sm font-bold text-gray-900 mb-1">Variation {i + 1}</p>
-                      <p className="text-sm text-gray-600">{ad}</p>
+                      <div className="text-sm text-gray-600">
+                        {typeof ad === 'object' && ad !== null 
+                          ? (ad as any).content || (ad as any).text || JSON.stringify(ad)
+                          : String(ad)}
+                      </div>
                       <button 
-                        onClick={() => handleCopy(ad, `${item.id}-ad-${i}`)}
+                        onClick={() => handleCopy(typeof ad === 'object' ? (ad as any).content : String(ad), `${item.id}-ad-${i}`)}
                         className="absolute top-2 right-2 p-1.5 bg-white border border-black/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         {copied === `${item.id}-ad-${i}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}

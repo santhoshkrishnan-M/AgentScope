@@ -39,6 +39,28 @@ export default function Reports({ user }: ReportsProps) {
     return () => unsubscribe();
   }, [user]);
 
+  const handleDownloadPDF = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (!selectedReport) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: selectedReport.title,
+          text: selectedReport.summary,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   if (selectedReport) {
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -48,11 +70,11 @@ export default function Reports({ user }: ReportsProps) {
             Back to Reports
           </Button>
           <div className="flex gap-3">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleDownloadPDF}>
               <Download className="w-4 h-4 mr-2" />
               Download PDF
             </Button>
-            <Button>Share Report</Button>
+            <Button onClick={handleShare}>Share Report</Button>
           </div>
         </div>
 
@@ -72,7 +94,7 @@ export default function Reports({ user }: ReportsProps) {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold border-b border-black/5 pb-4">Executive Summary</h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              {selectedReport.summary}
+              {typeof selectedReport.summary === 'object' ? JSON.stringify(selectedReport.summary) : String(selectedReport.summary || '')}
             </p>
           </div>
 
@@ -85,7 +107,9 @@ export default function Reports({ user }: ReportsProps) {
                 {(selectedReport.insights || []).map((insight, i) => (
                   <li key={i} className="flex gap-3 text-gray-600 leading-relaxed">
                     <span className="font-bold text-black">{i + 1}.</span>
-                    {insight}
+                    {typeof insight === 'object' && insight !== null 
+                      ? (insight as any).content || (insight as any).text || JSON.stringify(insight)
+                      : String(insight)}
                   </li>
                 ))}
               </ul>
@@ -99,7 +123,9 @@ export default function Reports({ user }: ReportsProps) {
                 {(selectedReport.recommendations || []).map((rec, i) => (
                   <li key={i} className="flex gap-3 p-4 bg-emerald-50 rounded-2xl text-emerald-900 font-medium text-sm">
                     <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                    {rec}
+                    {typeof rec === 'object' && rec !== null 
+                      ? (rec as any).content || (rec as any).text || JSON.stringify(rec)
+                      : String(rec)}
                   </li>
                 ))}
               </ul>
@@ -140,7 +166,7 @@ export default function Reports({ user }: ReportsProps) {
                   </p>
                 </div>
                 <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed">
-                  {report.summary}
+                  {typeof report.summary === 'object' ? JSON.stringify(report.summary) : String(report.summary || '')}
                 </p>
                 <div className="pt-4 flex items-center justify-between">
                   <Button variant="ghost" size="sm" onClick={() => setSelectedReport(report)}>

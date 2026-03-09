@@ -97,12 +97,14 @@ export default function AIInsights({ user }: AIInsightsProps) {
                     <span className="text-xs font-bold uppercase tracking-widest">Price Changes</span>
                   </div>
                   <ul className="space-y-1">
-                    {(insight.priceChanges || []).map((change: any, i: number) => (
+                    {Array.isArray(insight.priceChanges) ? insight.priceChanges.map((change: any, i: number) => (
                       <li key={i} className="text-sm font-medium text-gray-700 flex items-center justify-between">
                         <span>{change.product || 'Product'}</span>
                         <span className="text-emerald-600">{change.change || 'N/A'}</span>
                       </li>
-                    ))}
+                    )) : (
+                      <li className="text-sm text-gray-500 italic">No price changes detected</li>
+                    )}
                   </ul>
                 </div>
 
@@ -112,7 +114,7 @@ export default function AIInsights({ user }: AIInsightsProps) {
                     <span className="text-xs font-bold uppercase tracking-widest">Positioning</span>
                   </div>
                   <p className="text-sm font-medium text-gray-700 leading-relaxed">
-                    {insight.positioning}
+                    {typeof insight.positioning === 'object' ? JSON.stringify(insight.positioning) : String(insight.positioning || '')}
                   </p>
                 </div>
               </div>
@@ -123,18 +125,22 @@ export default function AIInsights({ user }: AIInsightsProps) {
                   <span className="text-xs font-bold uppercase tracking-widest">Campaigns Detected</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {(insight.campaigns || []).map((campaign, i) => (
+                  {Array.isArray(insight.campaigns) ? insight.campaigns.map((campaign, i) => (
                     <span key={i} className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                      {campaign}
+                      {typeof campaign === 'object' && campaign !== null 
+                        ? (campaign as any).content || (campaign as any).name || JSON.stringify(campaign)
+                        : String(campaign)}
                     </span>
-                  ))}
+                  )) : (
+                    <span className="text-xs text-gray-400 italic">No campaigns detected</span>
+                  )}
                 </div>
               </div>
 
               <div className="pt-6 border-t border-black/5">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Discount Patterns</h4>
                 <p className="text-sm text-gray-600 leading-relaxed italic">
-                  "{insight.discountPatterns}"
+                  "{typeof insight.discountPatterns === 'object' ? JSON.stringify(insight.discountPatterns) : String(insight.discountPatterns || '')}"
                 </p>
               </div>
             </Card>
